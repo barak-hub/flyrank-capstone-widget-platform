@@ -2,25 +2,21 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Tenant, Widget
-from app.schemas import WidgetCreate, WidgetUpdate, WidgetResponse
+from app.schemas import WidgetCreate, WidgetResponse, WidgetUpdate
+from app.services import (
+    create_widget,
+    delete_widget,
+    get_widget,
+    get_widgets,
+    update_widget,
+)
 
 router = APIRouter(
     prefix="/api/widgets",
     tags=["Widgets"],
 )
 
-
-def get_current_tenant(db: Session) -> Tenant:
-    tenant = db.query(Tenant).first()
-
-    if tenant is None:
-        tenant = Tenant(name="Demo Hotel Gym")
-        db.add(tenant)
-        db.commit()
-        db.refresh(tenant)
-
-    return tenant
+TEMPORARY_TENANT_ID = 1
 
 
 @router.post(
@@ -28,41 +24,27 @@ def get_current_tenant(db: Session) -> Tenant:
     response_model=WidgetResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_widget(
-    payload: WidgetCreate,
+def create_widget_endpoint(
+    data: WidgetCreate,
     db: Session = Depends(get_db),
 ):
-    tenant = get_current_tenant(db)
-
-    widget = Widget(
-        tenant_id=tenant.id,
-        name=payload.name,
-        widget_type=payload.widget_type,
-        status="active",
-        version=1,
+    return create_widget(
+        db=db,
+        tenant_id=TEMPORARY_TENANT_ID,
+        data=data,
     )
-
-    db.add(widget)
-    db.commit()
-    db.refresh(widget)
-
-    return widget
 
 
 @router.get(
     "",
     response_model=list[WidgetResponse],
 )
-def list_widgets(
+def list_widgets_endpoint(
     db: Session = Depends(get_db),
 ):
-    tenant = get_current_tenant(db)
-
-    return (
-        db.query(Widget)
-        .filter(Widget.tenant_id == tenant.id)
-        .order_by(Widget.id)
-        .all()
+    return get_widgets(
+        db=db,
+        tenant_id=TEMPORARY_TENANT_ID,
     )
 
 
@@ -70,19 +52,14 @@ def list_widgets(
     "/{widget_id}",
     response_model=WidgetResponse,
 )
-def get_widget(
+def get_widget_endpoint(
     widget_id: int,
     db: Session = Depends(get_db),
 ):
-    tenant = get_current_tenant(db)
-
-    widget = (
-        db.query(Widget)
-        .filter(
-            Widget.id == widget_id,
-            Widget.tenant_id == tenant.id,
-        )
-        .first()
+    widget = get_widget(
+        db=db,
+        tenant_id=TEMPORARY_TENANT_ID,
+        widget_id=widget_id,
     )
 
     if widget is None:
@@ -98,20 +75,15 @@ def get_widget(
     "/{widget_id}",
     response_model=WidgetResponse,
 )
-def update_widget(
+def update_widget_endpoint(
     widget_id: int,
-    payload: WidgetUpdate,
+    data: WidgetUpdate,
     db: Session = Depends(get_db),
 ):
-    tenant = get_current_tenant(db)
-
-    widget = (
-        db.query(Widget)
-        .filter(
-            Widget.id == widget_id,
-            Widget.tenant_id == tenant.id,
-        )
-        .first()
+    widget = get_widget(
+        db=db,
+        tenant_id=TEMPORARY_TENANT_ID,
+        widget_id=widget_id,
     )
 
     if widget is None:
@@ -120,36 +92,25 @@ def update_widget(
             detail="Widget not found",
         )
 
-    if payload.name is not None:
-        widget.name = payload.name
+    return update_widget(
+        db=db,
+        widget=widget,
+        data=data,
+    )
 
-    if payload.widget_type is not None:
-        widget.widget_type = payload.widget_type
 
-    if payload.status is not None:
-        widget.status = payload.status
-
-    widget.version += 1
-
-    db.commit()
-    db.refresh(widget)
-
-    return widget
-
-@router.delete("/{widget_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_widget(
+@router.delete(
+    "/{widget_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_widget_endpoint(
     widget_id: int,
     db: Session = Depends(get_db),
 ):
-    tenant = get_current_tenant(db)
-
-    widget = (
-        db.query(Widget)
-        .filter(
-            Widget.id == widget_id,
-            Widget.tenant_id == tenant.id,
-        )
-        .first()
+    widget = get_widget(
+        db=db,
+        tenant_id=TEMPORARY_TENANT_ID,
+        widget_id=widget_id,
     )
 
     if widget is None:
@@ -158,7 +119,4 @@ def delete_widget(
             detail="Widget not found",
         )
 
-    db.delete(widget)
-    db.commit()
-
-    return None
+    delete_widget(db=db, widget=widget)

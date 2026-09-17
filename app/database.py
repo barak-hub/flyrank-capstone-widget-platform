@@ -1,27 +1,30 @@
+import os
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-from app.config import settings
+load_dotenv()
 
-
-engine = create_engine(
-    settings.database_url,
-    pool_pre_ping=True,
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg2://widget_user:widget_password@localhost:5432/widget_platform",
 )
+
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(
-    bind=engine,
-    autoflush=False,
     autocommit=False,
+    autoflush=False,
+    bind=engine,
 )
 
-
-class Base(DeclarativeBase):
-    pass
+Base = declarative_base()
 
 
 def get_db():
     db = SessionLocal()
+
     try:
         yield db
     finally:
