@@ -5,11 +5,8 @@ class Settings(BaseSettings):
     app_name: str = "Widget Platform"
     environment: str = "development"
 
-    database_url: str = (
-        "postgresql+psycopg://postgres:postgres@localhost:5432/widget_platform"
-    )
-
-    secret_key: str = "development-secret-key"
+    database_url: str
+    secret_key: str
     allowed_origin: str = "http://localhost:5500"
 
     model_config = SettingsConfigDict(
