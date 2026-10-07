@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from app.models import Submission
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -18,6 +19,68 @@ router = APIRouter(
 
 TEMPORARY_TENANT_ID = 1
 
+
+@router.get("/stats")
+def get_dashboard_stats(
+    db: Session = Depends(get_db),
+):
+    total_submissions = (
+        db.query(Submission)
+        .filter(Submission.tenant_id == TEMPORARY_TENANT_ID)
+        .count()
+    )
+
+    membership_inquiries = (
+        db.query(Submission)
+        .filter(
+            Submission.tenant_id == TEMPORARY_TENANT_ID,
+            Submission.request_type == "membership_inquiry",
+        )
+        .count()
+    )
+
+    general_inquiries = (
+        db.query(Submission)
+        .filter(
+            Submission.tenant_id == TEMPORARY_TENANT_ID,
+            Submission.request_type == "general_inquiry",
+        )
+        .count()
+    )
+
+    return {
+        "total_submissions": total_submissions,
+        "membership_inquiries": membership_inquiries,
+        "general_inquiries": general_inquiries,
+    }
+
+@router.get("/{widget_id}/config")
+def get_public_widget_config(
+    widget_id: int,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    widget = get_widget(
+        db=db,
+        tenant_id=TEMPORARY_TENANT_ID,
+        widget_id=widget_id,
+    )
+
+    if widget is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Widget not found",
+        )
+
+    response.headers["Cache-Control"] = "public, max-age=300"
+
+    return {
+        "id": widget.id,
+        "name": widget.name,
+        "widget_type": widget.widget_type,
+        "status": widget.status,
+        "version": widget.version,
+    }
 
 @router.post(
     "",

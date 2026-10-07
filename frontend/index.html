@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Membership Widget</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="widget">
+        <h1>Join Our Gym</h1>
+        <p>Fill in your details and we'll get in touch with you.</p>
+
+        <form id="membership-form">
+
+            <label for="visitor_name">Full Name</label>
+            <input
+                type="text"
+                id="visitor_name"
+                name="visitor_name"
+                required
+            >
+
+            <label for="email">Email</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                required
+            >
+
+            <label for="phone">Phone</label>
+            <input
+                type="tel"
+                id="phone"
+                name="phone"
+                required
+            >
+
+            <label for="membership_id">Membership ID</label>
+            <input
+                type="text"
+                id="membership_id"
+                name="membership_id"
+                required
+            >
+
+            <label for="room_number">Room Number</label>
+            <input
+                type="text"
+                id="room_number"
+                name="room_number"
+            >
+
+            <label for="message">Message</label>
+            <textarea
+                id="message"
+                name="message"
+                rows="4"
+            ></textarea>
+
+            <!-- Honeypot field -->
+            <input
+                type="text"
+                id="honeypot"
+                name="honeypot"
+                autocomplete="off"
+                tabindex="-1"
+                style="display:none"
+            >
+
+            <button type="submit">Submit</button>
+
+            <p id="form-message"></p>
+
+        </form>
+    </div>
+
+    <script src="widget.js"></script>
+</body>
+</html>

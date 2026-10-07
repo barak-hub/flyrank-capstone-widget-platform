@@ -1,0 +1,8 @@
+name: flyrank-capstone-widget-platform
+track: backend-ai-engineering
+title: Embeddable Widget & Lead-Capture Platform
+framework: FastAPI
+language: Python
+database: PostgreSQL
+status: complete
+repository: https://github.com/barak-hub/flyrank-capstone-widget-platform

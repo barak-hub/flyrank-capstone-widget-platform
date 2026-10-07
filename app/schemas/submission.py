@@ -10,9 +10,11 @@ class SubmissionCreate(BaseModel):
     room_number: str | None = Field(default=None, max_length=50)
     message: str | None = Field(default=None, max_length=5000)
     honeypot: str | None = Field(default=None, max_length=100)
+    idempotency_key: str | None = Field(default=None, max_length=100)
 
     @model_validator(mode="after")
     def validate_contact_details(self):
         if not self.email and not self.phone:
             raise ValueError("Either email or phone is required")
+
         return self
